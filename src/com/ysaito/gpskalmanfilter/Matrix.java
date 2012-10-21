@@ -1,4 +1,4 @@
-
+package com.ysaito.gpskalmanfilter;
 public class Matrix {
 	private final int mRows, mCols;
 	private final double[] mData;  // mRows * mCols, row major 
@@ -33,7 +33,7 @@ public class Matrix {
 		return mData[row * mCols + col];
 	}
 	
-	public void set_identity_matrix() {
+	public void setIdentityMatrix() {
 		assert mRows == mCols;
 		for (int i = 0; i < mRows; ++i) {
 			for (int j = 0; j < mCols; ++j) {
@@ -60,26 +60,28 @@ public class Matrix {
 	}
 	
 	/**
-	 * this += a. 
+	 * c = a + b
 	 * 
-	 * @p a remains unchanged.
+	 * @p a and @p b remain unchanged.
 	 */
-	public void addFrom(Matrix a) {
-		assert mData.length == a.mData.length;
-		for (int i = 0; i < mData.length; ++i) {
-			mData[i] += a.mData[i];
+	public static void add(Matrix a, Matrix b, Matrix c) {
+		assert a.mData.length == b.mData.length;
+		assert a.mData.length == c.mData.length;		
+		for (int i = 0; i < a.mData.length; ++i) {
+			c.mData[i] = a.mData[i] + b.mData[i];
 		}
 	}
 
 	/**
-	 * this -= a. 
+	 * c = a - b
 	 * 
-	 * @p a remains unchanged.
+	 * @p a and @p b remain unchanged.
 	 */
-	public void subtractFrom(Matrix a) {
-		assert mData.length == a.mData.length;
-		for (int i = 0; i < mData.length; ++i) {
-			mData[i] -= a.mData[i];
+	public static void subtract(Matrix a, Matrix b, Matrix c) {
+		assert a.mData.length == b.mData.length;
+		assert a.mData.length == c.mData.length;		
+		for (int i = 0; i < a.mData.length; ++i) {
+			c.mData[i] = a.mData[i] - b.mData[i];
 		}
 	}
 	
@@ -193,12 +195,12 @@ public class Matrix {
 		   This is not the fastest way to invert matrices, so this is quite
 		   possibly the bottleneck. 
 	 */
-	public int destructive_invert_matrix(Matrix input, Matrix output) {
+	public static boolean invert(Matrix input, Matrix output) {
 		  assert(input.mRows == input.mCols);
 		  assert(input.mRows == output.mRows);
 		  assert(input.mRows == output.mCols);
 
-		  output.set_identity_matrix();
+		  output.setIdentityMatrix();
 
 		  /* Convert input to the identity matrix via elementary row operations.
 		     The ith pass through this loop turns the element at i,i to a 1
@@ -215,7 +217,7 @@ public class Matrix {
 				  if (r == input.mRows) {
 					  // Every remaining element in this column is zero, so this
 					  // matrix cannot be inverted. 
-					  return 0;
+					  return false;
 				  }
 				  input.swap_rows(i, r);
 				  output.swap_rows(i, r);
@@ -237,6 +239,6 @@ public class Matrix {
 				  output.shear_row(j, i, shear_needed);
 			  }
 		  }
-		  return 1;
+		  return true;
 	}
 }
