@@ -5,12 +5,6 @@ import org.junit.Test;
 
 import com.ysaito.gpskalmanfilter.*;
 public class GpsTest {
-
-	@Test
-	public void test() {
-
-	}
-
 	@Test
 	public void testBearingNorth() {
 		GpsKalmanFilter f = new GpsKalmanFilter(1.0);
@@ -44,6 +38,26 @@ public class GpsTest {
 		double dlon = f.getVelocityLong();
 		
 		assertTrue(Math.abs(dlat) < 0.000001);
+		assertTrue(Math.abs(dlon - 0.0001) < 0.000001);
+	}
+
+	@Test
+	public void testConstantTimestep() {
+		GpsKalmanFilter f = new GpsKalmanFilter(1.0);
+		
+		/* Move at a constant speed */
+		int east_distance = 0;
+		int north_distance = 0;		
+		for (int i = 0; i < 20; ++i) {
+			east_distance++;
+			north_distance++;
+			f.updateVelocity(north_distance * 0.0001, east_distance * 0.0001, 1.0);
+		}
+		
+		double dlat = f.getVelocityLat();
+		double dlon = f.getVelocityLong();
+		
+		assertTrue(Math.abs(dlat - 0.0001) < 0.000001);
 		assertTrue(Math.abs(dlon - 0.0001) < 0.000001);
 	}
 	

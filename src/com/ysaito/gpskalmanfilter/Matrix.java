@@ -84,7 +84,10 @@ public class Matrix {
 			c.mData[i] = a.mData[i] - b.mData[i];
 		}
 	}
-	
+
+	/**
+	 * this = I - this
+	 */
 	public void subtractFromIdentityMatrix() {
 		assert mRows == mCols;
 		for (int i = 0; i < mRows; ++i) {
@@ -97,7 +100,12 @@ public class Matrix {
 			}
 		}
 	}
-	
+
+	/**
+	 * c = a * b
+	 * 
+	 * @p a and @p b remain unchanged.
+	 */
 	public static void multiply(Matrix a, Matrix b, Matrix c) {
 		assert(a.mCols == b.mRows);
 		assert(a.mRows == c.mRows);
@@ -115,8 +123,11 @@ public class Matrix {
 		}
 	}
 	
-	/* This is multiplying a by b-tranpose so it is like multiply_matrix
-		   but references to b reverse mRows and mCols. */
+	/**
+	 * c = a * transpose(b)
+	 * 
+	 * @p a and @p b remain unchanged.
+	 */
 	public final static void multiplyByTransposeMatrix(Matrix a, Matrix b, Matrix c) {
 		assert(a.mCols == b.mCols);
 		assert(a.mRows == c.mRows);
@@ -134,7 +145,10 @@ public class Matrix {
 		}
 	}
 
-	public final static void transpose_matrix(Matrix input, Matrix output) {
+	/**
+	 * output = transpose(input)
+	 */
+	public final static void transpose(Matrix input, Matrix output) {
 		assert(input.mRows == output.mCols);
 		assert(input.mCols == output.mRows);
 		for (int i = 0; i < input.mRows; ++i) {
@@ -144,14 +158,17 @@ public class Matrix {
 		}
 	}
 	
-	public final boolean equals(Matrix a, Matrix b, double tolerance) {
-		assert(a.mData.length == b.mData.length);
-		for (int i = 0; i < a.mData.length; ++i) {
-			if (Math.abs(a.mData[i] - b.mData[i]) > tolerance) return false;
+	public final boolean equals(Matrix b, double tolerance) {
+		assert(mData.length == b.mData.length);
+		for (int i = 0; i < mData.length; ++i) {
+			if (Math.abs(mData[i] - b.mData[i]) > tolerance) return false;
 		}
 		return true;
 	}
 
+	/**
+	 * this = this * scalar
+	 */
 	public final void scale(double scalar) {
 		assert(scalar != 0.0);
 		for (int i = 0; i < mData.length; ++i) {
@@ -159,7 +176,7 @@ public class Matrix {
 		}
 	}
 
-	public final void swap_rows(int r1, int r2) {
+	public final void swapRows(int r1, int r2) {
 		assert(r1 != r2);
 		for (int col = 0; col < mCols; ++col) {
 			final double tmp = get(r1, col);
@@ -168,7 +185,7 @@ public class Matrix {
 		}
 	}
 
-	public final void scale_row(int row, double scalar) {
+	public final void scaleRow(int row, double scalar) {
 		assert(scalar != 0.0);
 		for (int col = 0; col < mCols; ++col) {
 			set(row, col, get(row, col) * scalar);
@@ -176,7 +193,7 @@ public class Matrix {
 	}
 
 	/* Add scalar * row r2 to row r1. */
-	public void shear_row(int row1, int row2, double scalar) {
+	public void shearRow(int row1, int row2, double scalar) {
 		assert(row1 != row2);
 		for (int col = 0; col < mCols; ++col) {
 			set(row1, col, get(row1, col) + scalar * get(row2, col));
@@ -219,15 +236,15 @@ public class Matrix {
 					  // matrix cannot be inverted. 
 					  return false;
 				  }
-				  input.swap_rows(i, r);
-				  output.swap_rows(i, r);
+				  input.swapRows(i, r);
+				  output.swapRows(i, r);
 			  }
 
 			  /* Scale this row to ensure a 1 along the diagonal.
 		       We might need to worry about overflow from a huge scalar here. */
 			  double scalar = 1.0 / input.get(i, i);
-			  input.scale_row(i, scalar);
-			  output.scale_row(i, scalar);
+			  input.scaleRow(i, scalar);
+			  output.scaleRow(i, scalar);
 			  
 			  /* Zero out the other elements in this column. */
 			  for (int j = 0; j < input.mRows; ++j) {
@@ -235,8 +252,8 @@ public class Matrix {
 					  continue;
 				  }
 				  double shear_needed = -input.get(j, i);
-				  input.shear_row(j, i, shear_needed);
-				  output.shear_row(j, i, shear_needed);
+				  input.shearRow(j, i, shear_needed);
+				  output.shearRow(j, i, shear_needed);
 			  }
 		  }
 		  return true;

@@ -1,6 +1,15 @@
 package com.ysaito.gpskalmanfilter;
 
 public class GpsKalmanFilter {
+	/** Create a GPS filter that only tracks two dimensions of position and
+	   velocity.
+	   The inherent assumption is that changes in velocity are randomly
+	   distributed around 0.
+	   
+	   @param noise A parameter you can use to alter the expected noise.
+	   1.0 is the original, and the higher it is, the more a path will be
+	   "smoothed".
+	   */
 	public GpsKalmanFilter(double noise) {
 		  /* The state model has four dimensions:
 	     x, y, x', y'
@@ -75,8 +84,14 @@ public class GpsKalmanFilter {
 		  mEstimateCovariance.scale(trillion);
 	}
 	
-	/* The position units are in thousandths of latitude and longitude.
-   The velocity units are in thousandths of position units per second.
+	/** Set the seconds per timestep in the velocity2d model.
+	 Defaults to one. 
+	 */
+
+	public void setSecondsPerTimestep(double seconds_per_timestep) {
+	/*
+	The position units are in thousandths of latitude and longitude.
+   	The velocity units are in thousandths of position units per second.
 
    So if there is one second per timestep, a velocity of 1 will change
    the lat or long by 1 after a million timesteps.
@@ -84,15 +99,17 @@ public class GpsKalmanFilter {
    Thus a typical position is hundreds of thousands of units.
    A typical velocity is maybe ten.
 	 */
-	private void setSecondsPerTimestep(double seconds_per_timestep) {
-		/* unit_scaler accounts for the relation between position and
-     velocity units */
+		
+		// unit_scaler accounts for the relation between position and
+		// velocity units 
 		final double unitScaler = 0.001;
 		mStateTransition.set(0, 2, unitScaler * seconds_per_timestep);
 		mStateTransition.set(1, 3, unitScaler * seconds_per_timestep);
 	}
 
-
+	/** Update the model with new gps data. 
+	 * 
+	 */
 	public final void updateVelocity(double lat, double lon,
 			double seconds_since_last_timestep) {
 		setSecondsPerTimestep(seconds_since_last_timestep);
@@ -100,26 +117,32 @@ public class GpsKalmanFilter {
 		update();
 	}
 
+	/** Extract the current latitude from the kalman filter */
 	public final double getLat() {
 		return mStateEstimate.get(0, 0) / 1000.0;
 	}
 	
+	/** Extract the current longitude from the kalman filter */
 	public final double getLong() {
 		return mStateEstimate.get(1, 0) / 1000.0;
 	}
-
+	
+	/** Extract velocity with latitude-per-second units from the filter */
 	public final double getVelocityLat() {
 		return mStateEstimate.get(2, 0) / (1000.0 * 1000.0);
 	}
 	
+	/** Extract velocity with longitude-per-second units from the filter */
 	public final double getVelocityLong() {
 		return mStateEstimate.get(3, 0) / (1000.0 * 1000.0);
 	}
-
-	/* See
+	
+	/** Extract a bearing from a velocity2d Kalman filter.
+	   0 = north, 90 = east, 180 = south, 270 = west */
+	public double getBearing() {
+		/* See
    http://www.movable-type.co.uk/scripts/latlong.html
    for formulas */
-	public double getBearing() {
 		double lat = getLat();
 		double lon = getLong();
 		double deltaLat = getVelocityLat();
@@ -152,6 +175,7 @@ public class GpsKalmanFilter {
 	}
 	static final double EARTH_RADIUS_IN_MILES = 3963.1676;
 	
+	/** Convert a lat, long, delta lat, and delta long into mph.*/
 	public static double calculateMph(double lat, double lon,
 			double deltaLat, double deltaLon) {
 		/* First, let's calculate a unit-independent measurement - the radii
@@ -180,7 +204,8 @@ public class GpsKalmanFilter {
 		return miles_per_hour;
 	}
 	
-	double get_mph() {
+	/** Extract speed in miles per hour from a velocity2d Kalman filter. */
+	public double getMph() {
 		double lat = getLat();
 		double lon = getLong();
 		double delta_lat = getVelocityLat();
